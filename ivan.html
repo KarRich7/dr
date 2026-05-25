@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Жесткий эдит — чистый стиль</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        /* Контейнер — центрируем всё */
+        .container {
+            width: 100%;
+            max-width: 720px;
+            text-align: center;
+        }
+
+        /* Зеленая кнопка — свежая, сочная, без лишних эффектов */
+        .hard-edit-btn {
+            background-color: #2ecc71;
+            border: none;
+            border-radius: 60px;
+            padding: 1.2rem 2.8rem;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: white;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+            width: 100%;
+            font-family: inherit;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+
+        .hard-edit-btn:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -12px rgba(46, 204, 113, 0.3);
+        }
+
+        .hard-edit-btn:active {
+            transform: translateY(1px);
+            background-color: #229954;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Оверлей — светлое затемнение (белый стиль, но с легкой полупрозрачностью) */
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.2s, opacity 0.25s ease;
+        }
+
+        /* Модальное окно — белое, минималистичное */
+        .video-modal {
+            width: 90%;
+            max-width: 1000px;
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 24px 24px 32px;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.03);
+            text-align: center;
+            transform: scale(0.96);
+            transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .video-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .video-overlay.active .video-modal {
+            transform: scale(1);
+        }
+
+        /* Видеоплеер — чистый, без лишних рамок */
+        video {
+            width: 100%;
+            max-height: 70vh;
+            border-radius: 20px;
+            background: #f8f9fa;
+            outline: none;
+            display: block;
+            margin-bottom: 24px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eef2f5;
+        }
+
+        /* Кнопка закрытия — зеленая обводка, но нейтральная */
+        .close-video-btn {
+            background: transparent;
+            border: 1.5px solid #2ecc71;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 10px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+            background-color: white;
+        }
+
+        .close-video-btn:hover {
+            background-color: #2ecc71;
+            color: white;
+            border-color: #2ecc71;
+            transform: scale(0.98);
+        }
+
+        .close-video-btn:active {
+            transform: scale(0.96);
+            background-color: #27ae60;
+        }
+
+        /* Адаптация под мобильные экраны */
+        @media (max-width: 640px) {
+            .hard-edit-btn {
+                font-size: 1.8rem;
+                padding: 1rem 1.8rem;
+            }
+            .video-modal {
+                padding: 20px 16px 24px;
+            }
+            .close-video-btn {
+                font-size: 1rem;
+                padding: 8px 22px;
+            }
+        }
+
+        /* Убираем любые дополнительные текстовые блоки — всё идеально чисто */
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Единственная зеленая кнопка, текст "Жесткий эдит" -->
+    <button class="hard-edit-btn" id="triggerVideoBtn">Жесткий эдит</button>
+</div>
+
+<!-- Оверлей плеера -->
+<div id="videoOverlay" class="video-overlay">
+    <div class="video-modal">
+        <video id="hardVideoPlayer" controls autoplay playsinline>
+            <source src="video.mp4" type="video/mp4">
+            <!-- Сообщение будет показано только если браузер не может воспроизвести видео (не ошибка, а фоллбэк) -->
+        </video>
+        <button class="close-video-btn" id="closeVideoBtn">Закрыть</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // DOM элементы
+        const triggerBtn = document.getElementById('triggerVideoBtn');
+        const overlay = document.getElementById('videoOverlay');
+        const closeBtn = document.getElementById('closeVideoBtn');
+        const videoPlayer = document.getElementById('hardVideoPlayer');
+
+        // Открыть видео и запустить воспроизведение (по клику — пользовательский жест)
+        function openVideoAndPlay() {
+            if (!overlay) return;
+            overlay.classList.add('active');
+            if (videoPlayer) {
+                // Сбросить на начало, чтобы каждый раз видео стартовало с первой секунды
+                videoPlayer.currentTime = 0;
+                videoPlayer.play().catch(err => {
+                    // Если по какой-то причине autoplay не сработал (почти нереально при клике)
+                    // просто тихо логируем, пользователь сам нажмет play
+                    console.warn("Автовоспроизведение временно заблокировано — нажмите play на плеере", err);
+                });
+            }
+        }
+
+        // Закрыть оверлей и остановить видео
+        function closeVideoAndStop() {
+            if (!overlay) return;
+            overlay.classList.remove('active');
+            if (videoPlayer) {
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0;
+            }
+        }
+
+        // Клик по главной зеленой кнопке
+        if (triggerBtn) {
+            triggerBtn.addEventListener('click', openVideoAndPlay);
+        }
+
+        // Клик по кнопке "Закрыть"
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeVideoAndStop);
+        }
+
+        // Клик по фону (оверлей) — закрытие
+        if (overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    closeVideoAndStop();
+                }
+            });
+        }
+
+        // Закрытие по клавише ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && overlay && overlay.classList.contains('active')) {
+                closeVideoAndStop();
+            }
+        });
+
+        // Простое уведомление в консоль для помощи (без текста на сайте):
+        // если видео отсутствует — никаких надписей на странице не появится, но в консоль выведем подсказку
+        if (videoPlayer) {
+            videoPlayer.addEventListener('error', function() {
+                console.warn("Видео не найдено. Поместите файл 'video.mp4' в ту же папку, что и HTML-страница.");
+            });
+        }
+    })();
+</script>
+</body>
+</html>
